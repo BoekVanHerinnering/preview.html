@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Verse Preview - Die Boek Van Herinnering</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f3f3;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    #verseCard {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 600px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      text-align: center;
+      user-select: text;
+    }
+    #verseReference {
+      font-weight: bold;
+      font-size: 1.5em;
+      margin-bottom: 15px;
+    }
+    #verseText {
+      white-space: pre-wrap;
+      font-size: 1.2em;
+      margin-bottom: 20px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 1em;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      background-color: #007BFF;
+      color: white;
+      margin: 5px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+
+<div id="verseCard">
+  <div id="verseReference">Loading...</div>
+  <div id="verseText"></div>
+  <button id="shareNowBtn">📤 Share Now</button>
+  <button id="downloadBtn">📥 Download Image</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script>
+  // Parse verse data from URL
+  const params = new URLSearchParams(window.location.search);
+  const dataJSON = params.get("data");
+
+  let verseData;
+
+  if (dataJSON) {
+    verseData = JSON.parse(decodeURIComponent(dataJSON));
+    document.getElementById("verseReference").textContent = verseData.reference;
+    document.getElementById("verseText").textContent = verseData.text;
+  } else {
+    document.getElementById("verseReference").textContent = "No verse data found.";
+    document.getElementById("verseText").textContent = "";
+  }
+
+  // Share button functionality
+  document.getElementById("shareNowBtn").addEventListener("click", () => {
+    const card = document.getElementById("verseCard");
+
+    if (navigator.canShare && navigator.canShare({ files: [] })) {
+      // Share as image
+      html2canvas(card).then(canvas => {
+        canvas.toBlob(blob => {
+          const file = new File([blob], "verse.png", { type: "image/png" });
+          navigator.share({
+            files: [file],
+            title: "📖 Die Boek Van Herinnering",
+            text: "Shared from Die Boek Van Herinnering Bible App",
+          }).catch(() => alert("Sharing cancelled or failed."));
+        });
+      });
+    } else {
+      // Fallback: share as text
+      navigator.share({
+        title: "📖 Die Boek Van Herinnering",
+        text: `${verseData.reference}\n\n${verseData.text}\n\n📥 Download the app:\nhttps://drive.google.com/uc?export=download&id=1afP3HY0AohMsfNXl6Wv-FnrMZBZiyybo`
+      }).catch(() => alert("Sharing cancelled or failed."));
+    }
+  });
+
+  // Download image button functionality
+  document.getElementById("downloadBtn").addEventListener("click", () => {
+    const card = document.getElementById("verseCard");
+    html2canvas(card).then(canvas => {
+      const link = document.createElement('a');
+      link.download = "verse.png";
+      link.href = canvas.toDataURL();
+      link.click();
+    });
+  });
+</script>
+
+</body>
+</html>
